@@ -117,7 +117,7 @@ Scratcher is a web application designed to optimize resumes (CVs) and search for
 
 ## License
 
-This project is under the MIT License.
+This project is under the GNU GPLv3 License with added terms.
 
 ## Contributing
 
