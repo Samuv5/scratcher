@@ -2,8 +2,29 @@ GNU GENERAL PUBLIC LICENSE
 Version 3, 29 June 2007
 
 Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Copyright (C) 2026 Samuel - Scratcher CV Optimizer
 
 Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
+
+---
+ADDITIONAL TERMS: Attribution and Copyleft
+---
+
+1. ATTRIBUTION: You must always credit the original author.
+   Any distribution or derivative work must clearly state:
+   - Original author: Samuel
+   - Project: Scratcher CV Optimizer  
+   - URL: https://github.com/Samuv5/scratcher
+
+2. COPYLEFT - SAME LICENSE: Any derivative work, modification, or distribution
+   of this software MUST be licensed under the same GNU General Public License v3.
+   You cannot change to a more restrictive license or make it proprietary.
+
+3. OPEN SOURCE FOREVER: This software must remain open source forever.
+   No portion of this code may ever be used in proprietary or closed-source software.
+
+4. COMMERCIAL USE: Commercial use is allowed, but must comply with all terms above.
+---
 
 Preamble
 
