@@ -87,8 +87,9 @@ if check_port 1234; then
     echo -e "${GREEN}✓ LM Studio is running on port 1234${NC}"
 else
     echo -e "${YELLOW}⚠ LM Studio not detected on port 1234${NC}"
-    echo -e "${YELLOW}  Make sure LM Studio is running with the nvidia/nemotron-3-nano-4b model${NC}"
-    echo -e "${YELLOW}  Press Enter to continue anyway...${NC}"
+    echo -e "${YELLOW}  If you want AI features, start LM Studio with any compatible model${NC}"
+    echo -e "${YELLOW}  The app will work without AI using keyword-based extraction${NC}"
+    echo -e "${YELLOW}  Press Enter to continue...${NC}"
     read
 fi
 
@@ -141,8 +142,7 @@ echo -e "  ${BLUE}URL: http://localhost:8000${NC}"
 echo -e "  ${BLUE}Logs: tail -f server.log${NC}"
 echo -e "  ${BLUE}Stop: pkill -f 'uvicorn main:app'${NC}"
 echo ""
-echo -e "  Model: ${YELLOW}nvidia/nemotron-3-nano-4b${NC}"
-echo -e "  Timeout: ${YELLOW}300s${NC}"
+echo -e "  AI Model: ${YELLOW}LM Studio (configurable in api/cv_optimizer.py)${NC}"
 echo ""
 
 # Open browser (optional)

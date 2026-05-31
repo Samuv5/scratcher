@@ -1,6 +1,7 @@
 let jobs = [];
 let currentJobIndex = 0;
 let cvFile = null;
+let isProcessing = false;
 
 // DOM Elements
 const uploadInput = document.getElementById('cv-upload');
@@ -17,6 +18,9 @@ const screenUpload = document.getElementById('upload-screen');
 const screenSwipe = document.getElementById('swipe-screen');
 const screenResult = document.getElementById('result-screen');
 const cardContainer = document.getElementById('card-container');
+const loaderEl = document.getElementById('loader');
+const optimizedContainer = document.getElementById('optimized-cv-container');
+const optimizedText = document.getElementById('optimized-cv-text');
 
 // CV Upload Event
 uploadInput.addEventListener('change', (e) => {
@@ -52,7 +56,9 @@ btnGithub.addEventListener('click', () => {
 
 // Start matching
 startBtn.addEventListener('click', async () => {
+    const statusMsg = document.getElementById('status-message');
     switchScreen(screenSwipe);
+    cardContainer.innerHTML = '<div class="tinder-card" style="justify-content:center;align-items:center;text-align:center;"><div class="loader" style="margin:20px auto;"></div><p style="color:#666;">Loading jobs...</p></div>';
     await fetchJobs();
     renderCurrentCard();
 });
@@ -72,12 +78,18 @@ async function fetchJobs() {
         
         const url = `/api/jobs?query=${query}&location=${loc}&language=${lang}`;
         const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        jobs = data.jobs;
+        jobs = data.jobs || [];
         // Shuffle jobs for tinder effect
         jobs.sort(() => Math.random() - 0.5);
+        if (jobs.length === 0) {
+            alert("No jobs found. Try different filters.");
+            switchScreen(screenUpload);
+        }
     } catch (e) {
-        alert("Error loading local job board");
+        alert("Error loading jobs: " + e.message);
+        switchScreen(screenUpload);
     }
 }
 
@@ -106,11 +118,11 @@ function renderCurrentCard() {
 
 // Pass / Apply Button Controls
 document.getElementById('btn-pass').addEventListener('click', () => {
-    swipeAction('left');
+    if (!isProcessing) swipeAction('left');
 });
 
 document.getElementById('btn-apply').addEventListener('click', () => {
-    swipeAction('right');
+    if (!isProcessing) swipeAction('right');
 });
 
 // Swipe Animation
@@ -118,6 +130,8 @@ function swipeAction(direction) {
     if (currentJobIndex >= jobs.length) return;
     const card = document.querySelector('.tinder-card');
     if (!card) return;
+    
+    if (direction === 'right') isProcessing = true;
     
     // Visual exit animation
     card.style.transform = `translateX(${direction === 'left' ? '-150%' : '150%'}) rotate(${direction === 'left' ? '-20deg' : '20deg'})`;
@@ -135,45 +149,49 @@ function swipeAction(direction) {
     }, 400); // match transition css duration
 }
 
-// Logic to communicate with Llama3 via FastAPI
+// Logic to communicate with FastAPI backend
 async function applyToJob(job) {
     switchScreen(screenResult);
     document.getElementById('applied-job-title').textContent = job.title;
-    document.getElementById('loader').style.display = 'block';
-    document.getElementById('optimized-cv-container').style.display = 'none';
+    loaderEl.style.display = 'block';
+    optimizedContainer.style.display = 'none';
     
     const formData = new FormData();
     formData.append('cv_file', cvFile);
     formData.append('job_title', job.title);
-    formData.append('job_description', job.description);
+    formData.append('job_text', job.description);
     
     try {
-        const res = await fetch('/api/apply', {
+        const res = await fetch('/api/optimize', {
             method: 'POST',
             body: formData
         });
         const data = await res.json();
         
-        document.getElementById('loader').style.display = 'none';
+        loaderEl.style.display = 'none';
         
-        if (data.success) {
-            document.getElementById('optimized-cv-container').style.display = 'flex';
-            document.getElementById('optimized-cv-container').style.flexDirection = 'column';
-            document.getElementById('optimized-cv-text').value = data.optimized_cv;
+        if (data.success && data.optimized_cv) {
+            optimizedContainer.style.display = 'flex';
+            optimizedContainer.style.flexDirection = 'column';
+            optimizedText.value = data.optimized_cv;
         } else {
-            alert("AI error optimizing CV: " + data.error);
-            switchScreen(screenSwipe);
-            renderCurrentCard();
+            alert("Could not optimize CV: " + (data.error || 'Unknown error'));
+            goBackToSwipe();
         }
     } catch (e) {
-        alert("Connection error to application server.");
-        switchScreen(screenSwipe);
-        renderCurrentCard();
+        alert("Connection error. Make sure the server is running.");
+        goBackToSwipe();
+    } finally {
+        isProcessing = false;
     }
+}
+
+function goBackToSwipe() {
+    switchScreen(screenSwipe);
+    renderCurrentCard();
 }
 
 // Go back to continue viewing cards
 document.getElementById('back-to-swipe-btn').addEventListener('click', () => {
-    switchScreen(screenSwipe);
-    renderCurrentCard();
+    goBackToSwipe();
 });

@@ -44,6 +44,8 @@ Scratcher is a web application designed to optimize resumes (CVs) and search for
 
 ## AI Configuration
 
+> **Note**: The app works **without AI** using keyword-based extraction and smart CV reorganization. AI features are optional enhancements.
+
 ### Option 1: Local AI with LM Studio (Recommended)
 1. Install [LM Studio](https://lmstudio.ai/)
 2. Download a model (e.g., Nemotron-3-Nano-4B or any GGUF model)
@@ -97,9 +99,22 @@ Scratcher is a web application designed to optimize resumes (CVs) and search for
 ## API Endpoints
 
 - `GET /`: Serves the React application.
+- `GET /api/health`: Health check endpoint.
 - `GET /api/jobs?query=...&location=...&language=...`: Gets jobs based on parameters.
-- `POST /api/upload-cv`: Uploads a CV for optimization.
+- `POST /api/upload-cv`: Uploads a CV for skill extraction.
+- `POST /api/analyze-job`: Analyzes job requirements from a URL.
+- `POST /api/analyze-job-text`: Analyzes job requirements from pasted text.
+- `POST /api/optimize`: Optimizes a CV file against job requirements.
 - `POST /api/optimize-text`: Optimizes CV text against job requirements.
+
+## Development
+
+### Run frontend in dev mode (hot reload):
+```bash
+cd client
+npm run dev
+# Opens at http://localhost:5173 with API proxy to :8000
+```
 
 ## Main Dependencies
 

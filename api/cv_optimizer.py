@@ -50,6 +50,16 @@ def clean_json(text):
     return text.strip()
 
 def extract_job_requirements(job_text):
+    """Extract requirements from job text - uses AI if available, otherwise keyword-based"""
+    # Try AI extraction first
+    ai_result = _extract_with_ai(job_text)
+    if ai_result["requirements"]:
+        return ai_result
+    
+    # Fallback: keyword-based extraction
+    return _extract_with_keywords(job_text)
+
+def _extract_with_ai(job_text):
     """Use AI to extract requirements from job text"""
     prompt = f"""Analyze this job offer and extract the information. Respond ONLY with valid JSON, no comments.
 
@@ -81,18 +91,16 @@ Respond with this exact JSON:
         if result.get("choices"):
             content = result["choices"][0].get("message", {}).get("content", "")
             
-            # Extraer JSON de bloques de código si existen
+            # Extract JSON from code blocks if present
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
             
-            # Limpiar el JSON
             content = clean_json(content)
             
             try:
                 parsed = json.loads(content)
-                # Ensure it has the necessary keys
                 return {
                     "title": parsed.get("title", "Position"),
                     "requirements": parsed.get("requirements", []),
@@ -100,92 +108,97 @@ Respond with this exact JSON:
                     "languages": parsed.get("languages", []),
                     "responsibilities": parsed.get("responsibilities", [])
                 }
-            except json.JSONDecodeError as e:
-                print(f"JSON parse error: {e}")
-                print(f"Content: {content[:500]}")
-    except Exception as e:
-        print(f"Error calling AI: {e}")
+            except json.JSONDecodeError:
+                pass
+    except Exception:
+        pass
     
+    return {"title": "Position", "requirements": [], "experience": "Not specified", "languages": [], "responsibilities": []}
+
+def _extract_with_keywords(job_text):
+    """Fallback: extract requirements using keyword matching"""
+    text_lower = job_text.lower()
+    
+    # Common requirement keywords
+    skills_keywords = [
+        "python", "javascript", "typescript", "react", "node.js", "node", "java",
+        "c++", "c#", "php", "ruby", "go", "golang", "rust", "swift", "kotlin",
+        "sql", "postgresql", "postgres", "mysql", "mongodb", "redis",
+        "aws", "azure", "gcp", "docker", "kubernetes", "k8s", "git",
+        "html", "css", "rest", "graphql", "microservices",
+        "machine learning", "ai", "data science", "tensorflow", "pytorch",
+        "agile", "scrum", "devops", "linux", "security", "ci/cd",
+        "fastapi", "django", "flask", "spring", "angular", "vue",
+        "excel", "power bi", "tableau", "sap",
+        "leadership", "communication", "teamwork", "analytical"
+    ]
+    
+    found = []
+    for skill in skills_keywords:
+        if skill in text_lower:
+            found.append(skill.title())
+    
+    # Extract potential title (first line or line with common title words)
+    title = "Position"
+    lines = job_text.split('\n')
+    for line in lines[:5]:
+        line = line.strip()
+        for prefix in ["job title:", "title:", "position:", "role:"]:
+            if line.lower().startswith(prefix):
+                title = line.split(":", 1)[1].strip()
+                break
+    
+    # Extract experience info
+    experience = "Not specified"
+    import re
+    exp_patterns = re.findall(r'(\d+)\+?\s*(?:years?|años)\s*(?:of\s+)?(?:experience|experiencia)', job_text.lower())
+    if exp_patterns:
+        experience = f"{max(int(x) for x in exp_patterns)}+ years"
+    
+    # Return found skills as requirements
     return {
-        "title": "Position",
-        "requirements": [],
-        "experience": "Not specified",
+        "title": title,
+        "requirements": found[:15],
+        "experience": experience,
         "languages": [],
         "responsibilities": []
     }
 
 def optimize_cv_with_job(cv_text, job_requirements, job_title):
     """Optimize CV based on user's REAL skills and job requirements"""
-    
-    # Prepare short requirements text
+    # Prepare requirements text
+    reqs_text = ""
     if isinstance(job_requirements, dict):
         reqs_list = job_requirements.get("requirements", [])
         if isinstance(reqs_list, list):
-            reqs_text = ", ".join([str(r) if isinstance(r, str) else str(r.get("general_skills", [""])[0]) if isinstance(r, dict) else "" for r in reqs_list[:10]])
-        else:
-            reqs_text = str(reqs_list)[:500]
-    else:
-        reqs_text = str(job_requirements)[:500]
+            reqs_text = ", ".join([str(r) if isinstance(r, str) else "" for r in reqs_list[:10]])
     
-    prompt = f"""You are an HR expert. Optimize this CV for the requested position.
+    location = job_requirements.get("location", "Unknown") if isinstance(job_requirements, dict) else "Unknown"
+    
+    # Try AI optimization
+    ai_result = _optimize_with_ai(cv_text, job_title, reqs_text, location)
+    if ai_result and len(ai_result) > 100:
+        return ai_result
+    
+    # Fallback: reorganize CV based on skill matching
+    return _optimize_fallback(cv_text, job_title, reqs_text)
 
-IMPORTANT RULES:
-1. PRESERVE all dates, companies, and original positions
-2. DO NOT invent experience or dates
-3. PRIORITIZE skills that match the position
-4. KEEP original contact information
-5. Include ALL relevant content from the original CV
-
-ORIGINAL CV:
-{cv_text[:15000]}
-
-TARGET POSITION: {job_title}
-KEY REQUIREMENTS: {reqs_text}
-
-Generate a complete CV with this EXACT format:
-
-# [FULL NAME]
-[Email] | [Phone] | [Location] | [LinkedIn if available]
-
-## PROFESSIONAL PROFILE
-[2-3 lines summarizing experience and objective]
-
-## TECHNICAL SKILLS
-• [Skill 1]
-• [Skill 2]
-[etc]
-
-## WORK EXPERIENCE
-
-### [Position] - [Company]
-*[Month Year] - [Month Year] | [City]*
-• [Achievement/responsibility 1]
-• [Achievement/responsibility 2]
-[Repeat for each job]
-
-## EDUCATION
-
-### [Degree] - [Institution]
-*[Graduation year]*
-[Relevant details]
-
-## OTHERS
-• Languages: [if applicable]
-• Certifications: [if applicable]
-
-Generate MINIMUM 600 words. Use ALL relevant content from the original CV."""
-
+def _optimize_with_ai(cv_text, job_title, reqs_text, location):
+    """Try AI-powered CV optimization"""
+    from api.ai_prompts import OPTIMIZE_CV_SYSTEM_PROMPT, OPTIMIZE_CV_USER_PROMPT_TEMPLATE
+    
+    user_prompt = OPTIMIZE_CV_USER_PROMPT_TEMPLATE.format(
+        job_title=job_title,
+        job_description=reqs_text or "General position",
+        location=location,
+        cv_text=cv_text[:15000]
+    )
+    
     payload = {
         "model": "nvidia/nemotron-3-nano-4b",
         "messages": [
-            {
-                "role": "system",
-                "content": "You adapt CVs. Only use real information. Respond in plain text with simple markdown formatting."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
+            {"role": "system", "content": OPTIMIZE_CV_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
         ],
         "temperature": 0.5,
         "max_tokens": 6000
@@ -197,25 +210,96 @@ Generate MINIMUM 600 words. Use ALL relevant content from the original CV."""
         
         if result.get("choices"):
             content = result["choices"][0].get("message", {}).get("content", "")
-            if content and len(content) > 50:
+            if content and len(content) > 100:
                 return content
-    except Exception as e:
-        print(f"Error calling AI for optimize: {e}")
+    except Exception:
+        pass
     
-    # Fallback: generate basic CV with available info
-    return f"""# {job_title}
+    return None
 
-## Professional Profile
-Professional with relevant experience for the {job_title} position.
-
-## Relevant Skills
-{reqs_text[:300] if reqs_text else 'Skills detected in your CV'}
-
-## Experience
-Experience documented in your original CV.
-
-## Note
-This is a basic CV. For complete optimization, try again or adjust manually according to job requirements."""
+def _optimize_fallback(cv_text, job_title, reqs_text):
+    """Generate optimized CV without AI - reorganizes existing content"""
+    lines = cv_text.split('\n')
+    
+    # Extract name (first non-empty line)
+    name = "Candidate"
+    email = ""
+    phone = ""
+    for line in lines:
+        clean = line.strip()
+        if clean and len(clean) < 60:
+            name = clean
+            break
+    
+    # Extract contact info
+    import re
+    for line in lines:
+        email_match = re.search(r'\S+@\S+\.\S+', line)
+        if email_match:
+            email = email_match.group()
+        phone_match = re.search(r'[\+]?[\d\s\-\(\)]{9,}', line)
+        if phone_match:
+            phone = phone_match.group().strip()
+    
+    # Extract sections
+    sections = {"experience": [], "education": [], "skills": [], "other": []}
+    current_section = "other"
+    section_keywords = {
+        "experience": ["experience", "work", "employment", "job", "professional"],
+        "education": ["education", "university", "college", "school", "degree", "bachelor", "master"],
+        "skills": ["skills", "technologies", "tools", "competencies", "languages"]
+    }
+    
+    for line in lines:
+        clean = line.strip().lower()
+        for section, keywords in section_keywords.items():
+            if any(kw in clean for kw in keywords) and len(clean) < 40:
+                current_section = section
+                break
+        if clean and not any(kw in clean for kw in ["email", "phone", "linkedin"]):
+            sections.setdefault(current_section, []).append(line.strip())
+    
+    # Build optimized CV
+    result = []
+    result.append(f"# {name}")
+    result.append(f"{' | '.join(filter(None, [email, phone]))}")
+    result.append("")
+    result.append("## PROFESSIONAL PROFILE")
+    result.append(f"Professional with experience seeking {job_title} position.")
+    if reqs_text:
+        result.append(f"Key strengths: {reqs_text}")
+    result.append("")
+    
+    if sections.get("skills"):
+        result.append("## SKILLS")
+        for s in sections["skills"][:10]:
+            if s and len(s) > 1:
+                result.append(f"• {s}")
+        result.append("")
+    
+    if sections.get("experience"):
+        result.append("## WORK EXPERIENCE")
+        for s in sections["experience"][:10]:
+            if s and len(s) > 1:
+                result.append(f"• {s}")
+        result.append("")
+    
+    if sections.get("education"):
+        result.append("## EDUCATION")
+        for s in sections["education"][:10]:
+            if s and len(s) > 1:
+                result.append(f"• {s}")
+        result.append("")
+    
+    if sections.get("other"):
+        other = [s for s in sections["other"] if s and len(s) > 1]
+        if other:
+            result.append("## ADDITIONAL INFORMATION")
+            for s in other[:5]:
+                result.append(f"• {s}")
+            result.append("")
+    
+    return '\n'.join(result)
 
 def extract_skills_from_text(text):
     common_skills = [
