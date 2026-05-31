@@ -1,139 +1,147 @@
 # Scratcher - CV Optimizer
 
-Scratcher is a web application designed to optimize resumes (CVs) and search for jobs automatically. It uses natural language processing (NLP) and web scraping techniques to analyze job requirements and suggest improvements to the user's CV.
+Scratcher optimiza CVs para ofertas de trabajo reales. Subí tu CV, pegá el link de la oferta, y obtené una versión adaptada destacando tus skills relevantes — con o sin IA.
 
 ## Features
 
-- **CV Optimization**: Analyzes CV content and adapts it to specific job vacancies.
-- **Job Search**: Extracts job offers from various sources based on keywords and location.
-- **Modern Web Interface**: Built with React and Vite on the frontend, and FastAPI on the backend.
-- **Text Extraction**: Supports multiple file formats (PDF, DOCX, etc.) for the CV.
-- **AI-Powered**: Uses local AI models via LM Studio or external APIs for intelligent CV optimization.
+- **Scrapers reales**: Busca ofertas de Indeed, LinkedIn y Computrabajo según tus filtros.
+- **Optimización inteligente**: Primero intenta con IA local (LM Studio); si no está disponible, usa matching por keywords.
+- **3 plantillas visuales**: Modern, Classic y Minimal — elegís antes de optimizar.
+- **Editor inline**: Modificá el CV optimizado antes de descargarlo.
+- **Vista Diff**: Compará lado a lado el CV original vs el optimizado.
+- **Exportación múltiple**: PDF, HTML (con template visual) y DOCX (Word).
+- **Persistencia SQLite**: Historial de CVs subidos, trabajos analizados y optimizaciones.
+- **Streaming con SSE**: Barra de progreso paso a paso mientras se procesa.
+- **Tema oscuro/claro**: Persistente en localStorage.
+- **Modo offline**: Funciona completo sin IA, con badge indicador.
+- **Tests**: Suite de pytest (backend) + vitest (frontend).
 
 ## Project Structure
 
 ```
 .
-├── api/                  # Backend modules (FastAPI)
-│   ├── ai_prompts.py     # AI optimization prompts
-│   ├── cv_optimizer.py   # CV optimization logic
-│   ├── job_scraper.py    # Job offer web scraping
-│   └── __init__.py
-├── client/               # Frontend (React + Vite)
-│   ├── src/              # React source code
-│   ├── public/           # Static assets
-│   ├── package.json      # Node.js dependencies
-│   └── vite.config.js    # Vite configuration
-├── static/               # Static files served by FastAPI
+├── api/                      # Backend modules (FastAPI)
+│   ├── __init__.py
+│   ├── ai_prompts.py         # AI optimization prompts
+│   ├── cv_optimizer.py       # CV optimization + PDF extraction
+│   ├── database.py           # SQLite persistence layer
+│   ├── job_scraper.py        # Real scrapers (Indeed, LinkedIn, Computrabajo)
+│   └── templates.py          # CV HTML/DOCX templates
+├── client/                   # Frontend (React + Vite)
+│   ├── src/
+│   │   ├── App.jsx           # Main component (step wizard)
+│   │   ├── App.css           # Full dark/light theme styles
+│   │   ├── App.test.jsx      # Vitest tests
+│   │   ├── index.css         # Global reset
+│   │   └── main.jsx          # Entry point
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── vitest.config.js
+├── static/                   # Alternative vanilla-JS frontend
 │   ├── index.html
 │   ├── script.js
 │   └── style.css
-├── main.py               # FastAPI entry point
-├── run.sh                # Server execution script
-├── start.sh              # Alternative startup script
-├── requirements.txt      # Python dependencies
-└── README.md             # This file
+├── tests/                    # Backend tests
+│   ├── __init__.py
+│   └── test_backend.py       # 20+ pytest tests
+├── main.py                   # FastAPI entry point (all routes)
+├── data/                     # SQLite DB + logs (auto-created)
+├── run.sh                    # Quick server start
+├── start.sh                  # Full startup script
+├── requirements.txt          # Python dependencies
+└── README.md
 ```
 
 ## Prerequisites
 
 - Python 3.10+
-- Node.js 16+ (for the frontend)
-- npm or yarn
-- LM Studio (for local AI) OR an AI API key (OpenAI, etc.)
+- Node.js 18+ (para el frontend)
+- npm
+
+## Instalación Rápida
+
+```bash
+git clone https://github.com/Samuv5/scratcher.git
+cd scratcher
+
+# Backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Frontend
+cd client
+npm install
+npm run build
+cd ..
+
+# Iniciar
+python main.py
+# Abrir http://localhost:8000
+```
 
 ## AI Configuration
 
-> **Note**: The app works **without AI** using keyword-based extraction and smart CV reorganization. AI features are optional enhancements.
+> La app funciona **sin IA** usando matching por keywords. La IA es opcional.
 
-### Option 1: Local AI with LM Studio (Recommended)
-1. Install [LM Studio](https://lmstudio.ai/)
-2. Download a model (e.g., Nemotron-3-Nano-4B or any GGUF model)
-3. Start the local server in LM Studio (usually at `http://localhost:1234`)
-4. The application will automatically connect to `http://localhost:1234/v1/chat/completions`
+### LM Studio (local, recomendado)
+1. Instalar [LM Studio](https://lmstudio.ai/)
+2. Descargar cualquier modelo GGUF
+3. Iniciar el servidor local en `http://localhost:1234`
+4. La app se conecta automáticamente
 
-### Option 2: External AI API
-1. Get an API key from OpenAI, Anthropic, or another provider
-2. Set the environment variable:
-   ```bash
-   export AI_API_KEY="your-api-key-here"
-   export AI_API_URL="https://api.openai.com/v1/chat/completions"
-   ```
-3. Modify `api/cv_optimizer.py` to use the external API endpoint
+## Development (hot reload)
 
-## Installation
+```bash
+# Terminal 1 — Backend
+python main.py
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd scratcher
-   ```
+# Terminal 2 — Frontend (con proxy a :8000)
+cd client
+npm run dev
+# Abrir http://localhost:5173
+```
 
-2. **Set up the backend**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+## Tests
 
-3. **Set up the frontend**:
-   ```bash
-   cd client
-   npm install
-   npm run build
-   ```
+```bash
+# Backend
+pytest tests/ -v
 
-## Usage
-
-1. **Start the server**:
-   ```bash
-   # From the project root
-   python main.py
-   # Or using the script
-   ./run.sh
-   ```
-
-2. **Access the application**:
-   Open your browser and visit `http://localhost:8000`.
+# Frontend
+cd client && npm test
+```
 
 ## API Endpoints
 
-- `GET /`: Serves the React application.
-- `GET /api/health`: Health check endpoint.
-- `GET /api/jobs?query=...&location=...&language=...`: Gets jobs based on parameters.
-- `POST /api/upload-cv`: Uploads a CV for skill extraction.
-- `POST /api/analyze-job`: Analyzes job requirements from a URL.
-- `POST /api/analyze-job-text`: Analyzes job requirements from pasted text.
-- `POST /api/optimize`: Optimizes a CV file against job requirements.
-- `POST /api/optimize-text`: Optimizes CV text against job requirements.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/health` | Health check + `ai_available` |
+| GET | `/api/jobs` | Scrapea ofertas (Indeed, LinkedIn, Computrabajo) |
+| GET | `/api/jobs/history` | Trabajos analizados recientemente |
+| GET | `/api/cvs` | Historial de CVs subidos |
+| GET | `/api/templates` | Lista de plantillas disponibles |
+| GET | `/api/optimizations` | Historial de optimizaciones |
+| POST | `/api/upload-cv` | Subir CV + detectar skills |
+| POST | `/api/analyze-job` | Analizar oferta desde URL |
+| POST | `/api/analyze-job-text` | Analizar oferta desde texto |
+| POST | `/api/optimize` | Optimizar CV (archivo) |
+| POST | `/api/optimize-text` | Optimizar CV (texto directo) |
+| POST | `/api/optimize-stream` | Optimizar con SSE progress |
+| POST | `/api/export/html` | Exportar CV a HTML |
+| POST | `/api/export/docx` | Exportar CV a DOCX |
+| POST | `/api/diff` | Diff original vs optimizado |
+| GET/POST | `/api/settings/{key}` | Leer/escribir settings |
 
-## Development
+## Dependencias
 
-### Run frontend in dev mode (hot reload):
-```bash
-cd client
-npm run dev
-# Opens at http://localhost:5173 with API proxy to :8000
-```
+### Backend
+`fastapi` · `uvicorn` · `requests` · `beautifulsoup4` · `lxml` · `pdfminer.six` · `python-docx` · `python-multipart` · `sse-starlette` · `loguru` · `pytest` · `httpx`
 
-## Main Dependencies
-
-### Backend (Python)
-- FastAPI
-- uvicorn
-- requests
-- beautifulsoup4
-- pdfminer.six (for PDF extraction)
-
-### Frontend (JavaScript)
-- React
-- Vite
-- Axios (for HTTP requests)
+### Frontend
+`react` · `react-dom` · `jspdf` · `vite` · `vitest` · `jsdom`
 
 ## License
 
-This project is under the GNU GPLv3 License with added terms.
-
-## Contributing
-
-Contributions are welcome. Please open an issue or pull request in the repository.
+GNU GPLv3 with additional terms.
