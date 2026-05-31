@@ -72,7 +72,7 @@ def render_cv_html(cv_text, template="modern"):
     css = tmpl["css"]
     
     return f"""<!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <style>

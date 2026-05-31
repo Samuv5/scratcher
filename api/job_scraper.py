@@ -148,7 +148,7 @@ def scrape_computrabajo(query, location="", limit=10):
                 title = title_el.get_text(strip=True) if title_el else query
                 company = company_el.get_text(strip=True) if company_el else "Unknown"
                 loc = location_el.get_text(strip=True) if location_el else (location or "México")
-                desc = desc_el.get_text(strip=True) if desc_el else f"Oferta de trabajo para {title} en {company}."
+                desc = desc_el.get_text(strip=True) if desc_el else f"Job offer for {title} at {company}."
                 
                 link = ""
                 if title_el and title_el.name == "a":

@@ -1,20 +1,20 @@
 # Scratcher - CV Optimizer
 
-Scratcher optimiza CVs para ofertas de trabajo reales. Subí tu CV, pegá el link de la oferta, y obtené una versión adaptada destacando tus skills relevantes — con o sin IA.
+Scratcher optimizes resumes (CVs) for real job openings. Upload your CV, paste a job link, and get an adapted version highlighting your relevant skills — with or without AI.
 
 ## Features
 
-- **Scrapers reales**: Busca ofertas de Indeed, LinkedIn y Computrabajo según tus filtros.
-- **Optimización inteligente**: Primero intenta con IA local (LM Studio); si no está disponible, usa matching por keywords.
-- **3 plantillas visuales**: Modern, Classic y Minimal — elegís antes de optimizar.
-- **Editor inline**: Modificá el CV optimizado antes de descargarlo.
-- **Vista Diff**: Compará lado a lado el CV original vs el optimizado.
-- **Exportación múltiple**: PDF, HTML (con template visual) y DOCX (Word).
-- **Persistencia SQLite**: Historial de CVs subidos, trabajos analizados y optimizaciones.
-- **Streaming con SSE**: Barra de progreso paso a paso mientras se procesa.
-- **Tema oscuro/claro**: Persistente en localStorage.
-- **Modo offline**: Funciona completo sin IA, con badge indicador.
-- **Tests**: Suite de pytest (backend) + vitest (frontend).
+- **Real job scrapers**: Fetches listings from Indeed, LinkedIn, and Computrabajo based on your filters.
+- **Smart optimization**: Tries local AI first (LM Studio); falls back to keyword matching if unavailable.
+- **3 visual templates**: Modern, Classic, and Minimal — pick before you optimize.
+- **Inline editor**: Modify the optimized CV before downloading.
+- **Diff view**: Side-by-side comparison of original vs optimized CV.
+- **Multi-format export**: PDF, HTML (with visual template), and DOCX (Word).
+- **SQLite persistence**: History of uploaded CVs, analyzed jobs, and optimizations.
+- **SSE streaming**: Step-by-step progress bar while processing.
+- **Dark/Light theme**: Persisted in localStorage.
+- **Offline mode**: Works fully without AI, with an indicator badge.
+- **Tests**: pytest suite (backend) + vitest (frontend).
 
 ## Project Structure
 
@@ -56,10 +56,10 @@ Scratcher optimiza CVs para ofertas de trabajo reales. Subí tu CV, pegá el lin
 ## Prerequisites
 
 - Python 3.10+
-- Node.js 18+ (para el frontend)
+- Node.js 18+ (for the frontend)
 - npm
 
-## Instalación Rápida
+## Quick Start
 
 ```bash
 git clone https://github.com/Samuv5/scratcher.git
@@ -76,20 +76,20 @@ npm install
 npm run build
 cd ..
 
-# Iniciar
+# Start
 python main.py
-# Abrir http://localhost:8000
+# Open http://localhost:8000
 ```
 
 ## AI Configuration
 
-> La app funciona **sin IA** usando matching por keywords. La IA es opcional.
+> The app works **without AI** using keyword matching. AI is optional.
 
-### LM Studio (local, recomendado)
-1. Instalar [LM Studio](https://lmstudio.ai/)
-2. Descargar cualquier modelo GGUF
-3. Iniciar el servidor local en `http://localhost:1234`
-4. La app se conecta automáticamente
+### LM Studio (local, recommended)
+1. Install [LM Studio](https://lmstudio.ai/)
+2. Download any GGUF model
+3. Start the local server at `http://localhost:1234`
+4. The app connects automatically
 
 ## Development (hot reload)
 
@@ -97,10 +97,10 @@ python main.py
 # Terminal 1 — Backend
 python main.py
 
-# Terminal 2 — Frontend (con proxy a :8000)
+# Terminal 2 — Frontend (proxied to :8000)
 cd client
 npm run dev
-# Abrir http://localhost:5173
+# Open http://localhost:5173
 ```
 
 ## Tests
@@ -115,26 +115,26 @@ cd client && npm test
 
 ## API Endpoints
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
+| Method | Route | Description |
+|--------|-------|-------------|
 | GET | `/api/health` | Health check + `ai_available` |
-| GET | `/api/jobs` | Scrapea ofertas (Indeed, LinkedIn, Computrabajo) |
-| GET | `/api/jobs/history` | Trabajos analizados recientemente |
-| GET | `/api/cvs` | Historial de CVs subidos |
-| GET | `/api/templates` | Lista de plantillas disponibles |
-| GET | `/api/optimizations` | Historial de optimizaciones |
-| POST | `/api/upload-cv` | Subir CV + detectar skills |
-| POST | `/api/analyze-job` | Analizar oferta desde URL |
-| POST | `/api/analyze-job-text` | Analizar oferta desde texto |
-| POST | `/api/optimize` | Optimizar CV (archivo) |
-| POST | `/api/optimize-text` | Optimizar CV (texto directo) |
-| POST | `/api/optimize-stream` | Optimizar con SSE progress |
-| POST | `/api/export/html` | Exportar CV a HTML |
-| POST | `/api/export/docx` | Exportar CV a DOCX |
-| POST | `/api/diff` | Diff original vs optimizado |
-| GET/POST | `/api/settings/{key}` | Leer/escribir settings |
+| GET | `/api/jobs` | Scrape job listings (Indeed, LinkedIn, Computrabajo) |
+| GET | `/api/jobs/history` | Recently analyzed jobs |
+| GET | `/api/cvs` | Uploaded CVs history |
+| GET | `/api/templates` | Available CV templates |
+| GET | `/api/optimizations` | Optimization history |
+| POST | `/api/upload-cv` | Upload CV + detect skills |
+| POST | `/api/analyze-job` | Analyze job from URL |
+| POST | `/api/analyze-job-text` | Analyze job from text |
+| POST | `/api/optimize` | Optimize CV (file upload) |
+| POST | `/api/optimize-text` | Optimize CV (direct text) |
+| POST | `/api/optimize-stream` | Optimize with SSE progress |
+| POST | `/api/export/html` | Export CV to HTML |
+| POST | `/api/export/docx` | Export CV to DOCX |
+| POST | `/api/diff` | Diff original vs optimized |
+| GET/POST | `/api/settings/{key}` | Read/write settings |
 
-## Dependencias
+## Dependencies
 
 ### Backend
 `fastapi` · `uvicorn` · `requests` · `beautifulsoup4` · `lxml` · `pdfminer.six` · `python-docx` · `python-multipart` · `sse-starlette` · `loguru` · `pytest` · `httpx`

@@ -41,7 +41,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# Configurar loguru
+# Configure loguru
 logger.add(
     os.path.join(DATA_DIR, "scratcher.log"),
     rotation="10 MB",

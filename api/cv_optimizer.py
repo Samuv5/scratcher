@@ -25,13 +25,13 @@ def extract_job_from_url(url):
         response = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Eliminar scripts y estilos
+        # Remove scripts and styles
         for script in soup(["script", "style"]):
             script.extract()
         
         text = soup.get_text(separator=' ', strip=True)
         
-        # Limpiar texto
+        # Clean text
         lines = [line.strip() for line in text.split('\n') if line.strip()]
         cleaned_text = ' '.join(lines)
         
@@ -151,7 +151,7 @@ def _extract_with_keywords(job_text):
     # Extract experience info
     experience = "Not specified"
     import re
-    exp_patterns = re.findall(r'(\d+)\+?\s*(?:years?|años)\s*(?:of\s+)?(?:experience|experiencia)', job_text.lower())
+    exp_patterns = re.findall(r'(\d+)\+?\s*(?:years?|years\s+of\s+experience|experience)', job_text.lower())
     if exp_patterns:
         experience = f"{max(int(x) for x in exp_patterns)}+ years"
     
