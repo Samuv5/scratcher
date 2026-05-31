@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { jsPDF } from 'jspdf'
+import { useI18n } from './i18n.js'
 import './App.css'
 
 const THEME_KEY = 'scratcher-theme'
 
 function App() {
+  const { t, toggleLang, currentLang } = useI18n()
   const [step, setStep] = useState(1)
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem(THEME_KEY) || 'dark'
@@ -111,7 +113,7 @@ function App() {
 
     setCvFile(file)
     setLoading(true)
-    setLoadingStep('Extracting skills from your CV...')
+    setLoadingStep(t('loading.uploading'))
     setError('')
 
     const formData = new FormData()
@@ -138,10 +140,10 @@ function App() {
           setStep(2)
         }
       } else {
-        setError(data.error || 'Error processing CV')
+        setError(data.error || t('error.processing'))
       }
     } catch (err) {
-      setError('Connection error')
+      setError(t('error.connection'))
     }
     setLoading(false)
   }
@@ -160,11 +162,11 @@ function App() {
 
   const analyzeJob = async () => {
     if (!jobUrl.trim()) {
-      setError('Paste the job link')
+      setError(t('error.paste_link'))
       return
     }
     setLoading(true)
-    setLoadingStep('Analyzing job requirements...')
+    setLoadingStep(t('loading.analyzing'))
     setError('')
 
     try {
@@ -189,13 +191,13 @@ function App() {
         setJobId(data.job_id)
         setStep(3)
       } else {
-        setError(data.error || 'Could not analyze job')
+        setError(data.error || t('error.analyze'))
         setJobRequirements({title: 'Position', requirements: [], experience: 'Not specified', languages: [], responsibilities: []})
         setJobTitle('Position')
         setStep(3)
       }
     } catch (err) {
-      setError('Connection error analyzing job')
+      setError(t('error.connection_analyze'))
       setJobRequirements({title: 'Position', requirements: [], experience: 'Not specified', languages: [], responsibilities: []})
       setJobTitle('Position')
       setStep(3)
@@ -205,11 +207,11 @@ function App() {
 
   const analyzeJobText = async () => {
     if (!jobText.trim()) {
-      setError('Paste the job description')
+      setError(t('error.paste_text'))
       return
     }
     setLoading(true)
-    setLoadingStep('Analyzing job requirements...')
+    setLoadingStep(t('loading.analyzing'))
     setError('')
 
     try {
@@ -234,13 +236,13 @@ function App() {
         setJobId(data.job_id)
         setStep(3)
       } else {
-        setError(data.error || 'Could not analyze job text')
+        setError(data.error || t('error.analyze_text'))
         setJobRequirements({title: 'Position', requirements: [], experience: 'Not specified', languages: [], responsibilities: []})
         setJobTitle('Position')
         setStep(3)
       }
     } catch (err) {
-      setError('Connection error analyzing job text')
+      setError(t('error.connection_analyze_text'))
       setJobRequirements({title: 'Position', requirements: [], experience: 'Not specified', languages: [], responsibilities: []})
       setJobTitle('Position')
       setStep(3)
@@ -250,7 +252,7 @@ function App() {
 
   const optimizeCV = async () => {
     setLoading(true)
-    setLoadingStep('Optimizing your CV for this position...')
+    setLoadingStep(t('loading.optimizing'))
     setError('')
     setProgress('')
     setDiffMode(false)
@@ -289,10 +291,10 @@ function App() {
         setStep(4)
         loadHistory()
       } else {
-        setError(data.error || 'Error optimizing')
+        setError(data.error || t('error.optimize'))
       }
     } catch (err) {
-      setError('Connection error')
+      setError(t('error.connection'))
     }
     setLoading(false)
   }
@@ -480,15 +482,18 @@ function App() {
         <div className="logo">Scratcher</div>
         <div className="nav-right">
           {!aiAvailable && (
-            <span className="no-ai-badge" title="AI not available — using keyword matching">
+              <span className="no-ai-badge" title={t('hero.ai_offline')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              No AI
+              {t('nav.no_ai')}
             </span>
           )}
+          <button className="lang-toggle" onClick={toggleLang} title={currentLang === 'en' ? t('nav.es') : t('nav.en')}>
+            {currentLang === 'en' ? 'ES' : 'EN'}
+          </button>
           <button className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
             {theme === 'dark' ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -511,7 +516,7 @@ function App() {
             </span>
           )}
           {history.length > 0 && (
-            <button className="history-btn" onClick={() => setShowHistory(!showHistory)} title="History">
+            <button className="history-btn" onClick={() => setShowHistory(!showHistory)} title={t('nav.history')}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 6 12 12 16 14"/>
@@ -524,15 +529,15 @@ function App() {
       <main className="main-content">
         {showHistory && (
           <div className="history-panel fade-in">
-            <h3>Recent Optimizations</h3>
+            <h3>{t('nav.recent')}</h3>
             {history.map((h, i) => (
               <div key={i} className="history-item">
                 <span className="history-title">{h.job_title}</span>
                 <span className="history-date">{new Date(h.created_at).toLocaleDateString()}</span>
-                {h.used_ai ? <span className="history-ai">AI</span> : <span className="history-noai">Keywords</span>}
+                {h.used_ai ? <span className="history-ai">AI</span> : <span className="history-noai">{t('nav.keywords')}</span>}
               </div>
             ))}
-            <button className="close-history" onClick={() => setShowHistory(false)}>Close</button>
+            <button className="close-history" onClick={() => setShowHistory(false)}>{t('nav.close')}</button>
           </div>
         )}
 
@@ -562,28 +567,28 @@ function App() {
                   </svg>
                 </div>
               </div>
-              <h1>Your perfect CV,<br/><span className="gradient-text">without lies</span></h1>
-              <p>Upload your CV and paste the job link. We adapt your real experience with the skills they're looking for.</p>
+              <h1>{t('hero.title')}<br/><span className="gradient-text">{t('hero.subtitle')}</span></h1>
+              <p>{t('hero.desc')}</p>
               {!aiAvailable && (
                 <div className="offline-badge">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
-                  AI not connected — using keyword matching
+                  {t('hero.ai_offline')}
                 </div>
               )}
               <div className="hero-stats">
                 <div className="stat">
                   <span className="stat-number">100%</span>
-                  <span className="stat-label">Honest</span>
+                  <span className="stat-label">{t('hero.honest')}</span>
                 </div>
                 <div className="stat">
                   <span className="stat-number">{templates.length || 3}</span>
-                  <span className="stat-label">Templates</span>
+                  <span className="stat-label">{t('hero.templates')}</span>
                 </div>
                 <div className="stat">
                   <span className="stat-number">{aiAvailable ? 'AI' : 'KW'}</span>
-                  <span className="stat-label">{aiAvailable ? 'AI Optimized' : 'Keywords'}</span>
+                  <span className="stat-label">{aiAvailable ? t('hero.ai_mode') : t('hero.kw_mode')}</span>
                 </div>
               </div>
             </div>
@@ -597,8 +602,8 @@ function App() {
                   <path d="m9 16 3-3 3 3"/>
                 </svg>
               </div>
-              <h3>Drag your CV here</h3>
-              <p>or click to select • PDF only</p>
+              <h3>{t('upload.drag')}</h3>
+              <p>{t('upload.click')}</p>
             </div>
           </div>
         )}
@@ -612,23 +617,23 @@ function App() {
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
               </div>
-              <h2>Contact Information</h2>
-              <p className="subtitle">We couldn't find some data in your CV. Help us complete it:</p>
+              <h2>{t('contact.title')}</h2>
+              <p className="subtitle">{t('contact.desc')}</p>
               <div className="contact-inputs">
                 <div className="input-group">
-                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</label>
-                  <input type="email" value={contactData.email} onChange={(e) => setContactData({...contactData, email: e.target.value})}                     placeholder="you@email.com" />
+                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>{t('contact.email')}</label>
+                  <input type="email" value={contactData.email} onChange={(e) => setContactData({...contactData, email: e.target.value})}                     placeholder={t('contact.email_placeholder')} />
                 </div>
                 <div className="input-group">
-                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Phone</label>
-                  <input type="tel" value={contactData.phone} onChange={(e) => setContactData({...contactData, phone: e.target.value})} placeholder="+34 600 123 456" />
+                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>{t('contact.phone')}</label>
+                  <input type="tel" value={contactData.phone} onChange={(e) => setContactData({...contactData, phone: e.target.value})} placeholder={t('contact.phone_placeholder')} />
                 </div>
                 <div className="input-group">
-                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn (optional)</label>
-                  <input type="text" value={contactData.linkedin} onChange={(e) => setContactData({...contactData, linkedin: e.target.value})}                     placeholder="linkedin.com/in/your-profile" />
+                  <label><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>{t('contact.linkedin')}</label>
+                  <input type="text" value={contactData.linkedin} onChange={(e) => setContactData({...contactData, linkedin: e.target.value})}                     placeholder={t('contact.linkedin_placeholder')} />
                 </div>
               </div>
-              <button className="continue-btn" onClick={continueAfterContactForm}>Continue</button>
+              <button className="continue-btn" onClick={continueAfterContactForm}>{t('contact.continue')}</button>
             </div>
           </div>
         )}
@@ -640,16 +645,16 @@ function App() {
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              CV Loaded
+              {t('cv.loaded')}
             </div>
 
             <div className="skills-section">
-              <h2>Your Skills</h2>
+              <h2>{t('cv.your_skills')}</h2>
               <div className="skills-grid">
                 {cvSkills.map((skill, i) => (
                   <span key={i} className="skill-tag">{skill}</span>
                 ))}
-                {cvSkills.length === 0 && <span className="skill-tag">Skills detected</span>}
+                {cvSkills.length === 0 && <span className="skill-tag">{t('cv.skills_detected')}</span>}
               </div>
               {locationName && locationName !== 'Location unavailable' && (
                 <div className="location-info">
@@ -662,27 +667,27 @@ function App() {
               )}
             </div>
 
-            <h3>Job Info</h3>
-            <p className="subtitle">Paste the link OR the job description</p>
+            <h3>{t('job.title')}</h3>
+            <p className="subtitle">{t('job.desc')}</p>
 
             <div className="mode-tabs">
               <button className={"mode-tab" + (inputMode === 'url' ? ' active' : '')} onClick={() => setInputMode('url')}>
-                Link
+                {t('job.link')}
               </button>
               <button className={"mode-tab" + (inputMode === 'text' ? ' active' : '')} onClick={() => setInputMode('text')}>
-                Text
+                {t('job.text')}
               </button>
             </div>
 
             {inputMode === 'url' ? (
               <div className="url-input-container">
-                <input type="text" value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://www.linkedin.com/jobs/..." className="url-input" />
-                <button className="analyze-btn" onClick={analyzeJob}>Analyze</button>
+                <input type="text" value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder={t('job.placeholder_url')} className="url-input" />
+                <button className="analyze-btn" onClick={analyzeJob}>{t('job.analyze')}</button>
               </div>
             ) : (
               <div className="text-input-container">
-                <textarea value={jobText} onChange={(e) => setJobText(e.target.value)} placeholder="Paste the job description here..." className="job-text-input" rows={6} />
-                <button className="analyze-btn" onClick={analyzeJobText}>Analyze</button>
+                <textarea value={jobText} onChange={(e) => setJobText(e.target.value)} placeholder={t('job.placeholder_text')} className="job-text-input" rows={6} />
+                <button className="analyze-btn" onClick={analyzeJobText}>{t('job.analyze')}</button>
               </div>
             )}
 
@@ -693,7 +698,7 @@ function App() {
               setJobRequirements({title: 'Position', requirements: []})
               setStep(3)
             }}>
-              Skip and continue without AI
+              {t('job.skip')}
             </button>
           </div>
         )}
@@ -705,29 +710,29 @@ function App() {
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
-              Analysis Complete
+              {t('analysis.complete')}
             </div>
 
             <h2 className="job-title-display">{jobRequirements.title || 'Position'}</h2>
 
             <div className="requirements-card">
-              <h4>Requirements</h4>
+              <h4>{t('analysis.requirements')}</h4>
               <div className="skills-grid">
                 {jobRequirements.requirements?.length > 0
                   ? jobRequirements.requirements.map((req, i) => (
                       <span key={i} className="skill-tag req">{req}</span>
                     ))
-                  : <span className="skill-tag">Not specified</span>
+                  : <span className="skill-tag">{t('analysis.not_specified')}</span>
                 }
               </div>
-              <h4>Experience</h4>
-              <p>{jobRequirements.experience || 'Not specified'}</p>
-              <h4>Languages</h4>
-              <p>{jobRequirements.languages?.length > 0 ? jobRequirements.languages.join(', ') : 'Not specified'}</p>
+              <h4>{t('analysis.experience')}</h4>
+              <p>{jobRequirements.experience || t('analysis.not_specified')}</p>
+              <h4>{t('analysis.languages')}</h4>
+              <p>{jobRequirements.languages?.length > 0 ? jobRequirements.languages.join(', ') : t('analysis.not_specified')}</p>
             </div>
 
             <div className="template-picker">
-              <label>Template:</label>
+              <label>{t('analysis.template')}</label>
               <div className="template-options">
                 {templates.length > 0 ? templates.map(t => (
                   <button key={t.id} className={"template-btn" + (template === t.id ? ' active' : '')} onClick={() => setTemplate(t.id)}>
@@ -744,7 +749,7 @@ function App() {
             {progress && <div className="progress-line"><div className="progress-fill"></div><span>{progress}</span></div>}
 
             <button className="optimize-btn" onClick={optimizeCV} disabled={loading}>
-              {loading ? 'Optimizing...' : 'Optimize My CV'}
+              {loading ? t('analysis.optimizing') : t('analysis.optimize')}
             </button>
 
             {error && <p className="error-text">{error}</p>}
@@ -760,27 +765,27 @@ function App() {
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
                   </svg>
-                  CV Optimized!
+                  {t('result.optimized')}
                 </div>
-                {!aiAvailable && <span className="no-ai-badge result-badge">Keyword matched</span>}
+                {!aiAvailable && <span className="no-ai-badge result-badge">{t('result.keyword')}</span>}
               </div>
-              <h2>Ready for {jobTitle}</h2>
-              <p className="subtitle">We only use your real skills • Template: {template}</p>
+              <h2>{t('result.ready_for')} {jobTitle}</h2>
+              <p className="subtitle">{t('result.honest_msg')} • {t('analysis.template')} {template}</p>
 
               <div className="editor-toolbar">
-                <button className={"toolbar-btn" + (!isEditing ? ' active' : '')} onClick={() => { setIsEditing(false); setEditableCV(optimizedCV) }}>Preview</button>
-                <button className={"toolbar-btn" + (isEditing ? ' active' : '')} onClick={() => setIsEditing(true)}>Edit</button>
-                <button className="toolbar-btn" onClick={() => setDiffMode(!diffMode)}>Diff</button>
+                <button className={"toolbar-btn" + (!isEditing ? ' active' : '')} onClick={() => { setIsEditing(false); setEditableCV(optimizedCV) }}>{t('result.preview')}</button>
+                <button className={"toolbar-btn" + (isEditing ? ' active' : '')} onClick={() => setIsEditing(true)}>{t('result.edit')}</button>
+                <button className="toolbar-btn" onClick={() => setDiffMode(!diffMode)}>{t('result.diff')}</button>
               </div>
 
               {diffMode ? (
                 <div className="diff-container">
                   <div className="diff-pane">
-                    <h4>Original</h4>
+                    <h4>{t('result.original')}</h4>
                     <pre>{cvText}</pre>
                   </div>
                   <div className="diff-pane">
-                    <h4>Optimized</h4>
+                    <h4>{t('result.optimized_cv')}</h4>
                     <pre>{editableCV}</pre>
                   </div>
                 </div>
@@ -788,8 +793,8 @@ function App() {
                 <div className="cv-editor-box">
                   <textarea value={editableCV} onChange={(e) => setEditableCV(e.target.value)} className="cv-editor" />
                   <div className="editor-actions">
-                    <button className="save-edit-btn" onClick={saveEdit}>Save Changes</button>
-                    <button className="cancel-edit-btn" onClick={() => { setEditableCV(optimizedCV); setIsEditing(false) }}>Cancel</button>
+                    <button className="save-edit-btn" onClick={saveEdit}>{t('result.save')}</button>
+                    <button className="cancel-edit-btn" onClick={() => { setEditableCV(optimizedCV); setIsEditing(false) }}>{t('result.cancel')}</button>
                   </div>
                 </div>
               ) : (
@@ -805,14 +810,14 @@ function App() {
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
-                  PDF
+                  {t('result.pdf')}
                 </button>
                 <button className="download-btn secondary" onClick={downloadHTML}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
                   </svg>
-                  HTML
+                  {t('result.html')}
                 </button>
                 <button className="download-btn secondary" onClick={downloadDocx}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -821,10 +826,10 @@ function App() {
                     <line x1="16" y1="13" x2="8" y2="13"/>
                     <line x1="16" y1="17" x2="8" y2="17"/>
                   </svg>
-                  DOCX
+                  {t('result.docx')}
                 </button>
                 <button className="back-btn" onClick={() => setStep(1)}>
-                  Start over
+                  {t('result.start_over')}
                 </button>
               </div>
             </div>
